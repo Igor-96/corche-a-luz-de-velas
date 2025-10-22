@@ -71,22 +71,28 @@
       });
     </script>
 
-    <!-- 4) Listener do popup + forçar conclusão/refresh -->
     <script>
       function finishLogin(token) {
+        try {
+          // grava explicitamente como o Decap espera
+          localStorage.setItem("netlify-cms-user", JSON.stringify({ token, provider: "github" }));
+          localStorage.setItem("decap-cms-auth", JSON.stringify({ token, provider: "github" }));
+        } catch(_) {}
+
         try {
           if (window.CMS && CMS.oauthComplete) {
             CMS.oauthComplete({ token, provider: "github" });
           }
         } catch (e) { console.warn("oauthComplete error:", e); }
-        // força hash da página do painel e recarrega UI
+
+        // empurra para uma rota do painel e recarrega a UI
         try { window.location.hash = "#/collections/catalogo"; } catch(_) {}
-        try { setTimeout(() => window.location.reload(), 200); } catch(_) {}
+        try { setTimeout(() => window.location.reload(), 150); } catch(_) {}
       }
 
+      // Recebe do popup
       window.addEventListener("message", (e) => {
         try {
-          console.log("OAuth message:", e.data);
           if (typeof e.data === "string" && e.data.startsWith("authorization:github:")) {
             const token = e.data.split(":").pop();
             finishLogin(token);
@@ -100,42 +106,44 @@
           console.warn("message handler error:", err);
         }
       }, false);
-    </script>
 
-    <!-- 5) Fallback: token salvo pelo callback -->
-    <script>
+      // Fallback imediato: pegar token salvo pelo callback
       (function pickupLocalToken(){
         try {
-          const t = localStorage.getItem("decap_token");
+          // pega de qualquer uma das chaves
+          const t1 = localStorage.getItem("decap_token");
+          const t2 = (() => { try { return JSON.parse(localStorage.getItem("netlify-cms-user")||"{}").token; } catch(_){ return null }})();
+          const t3 = (() => { try { return JSON.parse(localStorage.getItem("decap-cms-auth")||"{}").token; } catch(_){ return null }})();
+          const t = t1 || t2 || t3;
           if (t) {
-            console.log("Found token in localStorage");
             localStorage.removeItem("decap_token");
             finishLogin(t);
           }
-        } catch(e) {}
+        } catch(_) {}
       })();
-    </script>
 
-    <!-- 6) Polling extra (quando o popup fecha rápido) -->
-    <script>
+      // Polling extra (caso o popup feche antes do setItem propagar)
       (function pollForToken(){
         let tries = 0;
         const maxTries = 60; // ~18s
         const iv = setInterval(() => {
           tries++;
           try {
-            const t = localStorage.getItem("decap_token");
+            const t1 = localStorage.getItem("decap_token");
+            const t2 = (() => { try { return JSON.parse(localStorage.getItem("netlify-cms-user")||"{}").token; } catch(_){ return null }})();
+            const t3 = (() => { try { return JSON.parse(localStorage.getItem("decap-cms-auth")||"{}").token; } catch(_){ return null }})();
+            const t = t1 || t2 || t3;
             if (t) {
-              console.log("Polling got token");
               localStorage.removeItem("decap_token");
               finishLogin(t);
               clearInterval(iv);
             }
-          } catch(e){}
+          } catch(_) {}
           if (tries >= maxTries) clearInterval(iv);
         }, 300);
       })();
     </script>
+
   </body>
 </html>
 
