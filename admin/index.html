@@ -6,10 +6,143 @@
     <title>Admin</title>
   </head>
   <body>
-    <!-- Força o Decap a carregar /admin/config.yml e com cache-buster -->
-    <script
-      src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"
-      data-config-path="/admin/config.yml?ts=2">
+    <!-- 1) Desativa auto-init ANTES do script do Decap -->
+    <script>
+      window.CMS_MANUAL_INIT = true;
     </script>
+
+    <!-- 2) Carrega a versão mais recente 3.x -->
+    <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"></script>
+
+    <!-- 3) Inicializa manualmente -->
+    <script>
+      CMS.init({
+        config: {
+          backend: {
+            name: "github",
+            repo: "Igor-96/croche-a-luz-de-velas",   // nome EXATO do seu repo
+            branch: "main",
+            base_url: "https://crochealuzdevelas.vercel.app",
+            auth_endpoint: "/api/authorize"
+          },
+          media_folder: "assets/uploads",
+          public_folder: "/assets/uploads",
+          collections: [
+            {
+              name: "catalogo",
+              label: "Catálogo",
+              files: [
+                {
+                  file: "data/content.json",
+                  label: "Conteúdo da Loja",
+                  name: "conteudo",
+                  fields: [
+                    { label:"Produtos (home)", name:"PRODUCTS", widget:"list", fields:[
+                      {label:"ID", name:"id", widget:"string"},
+                      {label:"Título", name:"title", widget:"string"},
+                      {label:"Preço", name:"price", widget:"number", value_type:"float"},
+                      {label:"Tag", name:"tag", widget:"string"},
+                      {label:"Imagem", name:"img", widget:"image"},
+                      {label:"Destaque", name:"featured", widget:"boolean", default:false},
+                      {label:"Descrição", name:"blurb", widget:"text", required:false}
+                    ]},
+                    { label:"Crochês", name:"CROCHES", widget:"list", fields:[
+                      {label:"ID", name:"id", widget:"string"},
+                      {label:"Título", name:"title", widget:"string"},
+                      {label:"Preço", name:"price", widget:"number", value_type:"float"},
+                      {label:"Tag", name:"tag", widget:"string"},
+                      {label:"Imagem", name:"img", widget:"image"},
+                      {label:"Descrição", name:"blurb", widget:"text", required:false}
+                    ]},
+                    { label:"Velas", name:"VELAS", widget:"list", fields:[
+                      {label:"ID", name:"id", widget:"string"},
+                      {label:"Título", name:"title", widget:"string"},
+                      {label:"Preço", name:"price", widget:"number", value_type:"float"},
+                      {label:"Tag", name:"tag", widget:"string"},
+                      {label:"Imagem", name:"img", widget:"image"},
+                      {label:"Descrição", name:"blurb", widget:"text", required:false}
+                    ]}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      });
+    </script>
+
+    <script>
+      function finishLogin(token) {
+        try {
+          // grava explicitamente como o Decap espera
+          localStorage.setItem("netlify-cms-user", JSON.stringify({ token, provider: "github" }));
+          localStorage.setItem("decap-cms-auth", JSON.stringify({ token, provider: "github" }));
+        } catch(_) {}
+
+        try {
+          if (window.CMS && CMS.oauthComplete) {
+            CMS.oauthComplete({ token, provider: "github" });
+          }
+        } catch (e) { console.warn("oauthComplete error:", e); }
+
+        // empurra para uma rota do painel e recarrega a UI
+        try { window.location.hash = "#/collections/catalogo"; } catch(_) {}
+        try { setTimeout(() => window.location.reload(), 150); } catch(_) {}
+      }
+
+      // Recebe do popup
+      window.addEventListener("message", (e) => {
+        try {
+          if (typeof e.data === "string" && e.data.startsWith("authorization:github:")) {
+            const token = e.data.split(":").pop();
+            finishLogin(token);
+            return;
+          }
+          if (e.data && e.data.token) {
+            finishLogin(e.data.token);
+            return;
+          }
+        } catch (err) {
+          console.warn("message handler error:", err);
+        }
+      }, false);
+
+      // Fallback imediato: pegar token salvo pelo callback
+      (function pickupLocalToken(){
+        try {
+          // pega de qualquer uma das chaves
+          const t1 = localStorage.getItem("decap_token");
+          const t2 = (() => { try { return JSON.parse(localStorage.getItem("netlify-cms-user")||"{}").token; } catch(_){ return null }})();
+          const t3 = (() => { try { return JSON.parse(localStorage.getItem("decap-cms-auth")||"{}").token; } catch(_){ return null }})();
+          const t = t1 || t2 || t3;
+          if (t) {
+            localStorage.removeItem("decap_token");
+            finishLogin(t);
+          }
+        } catch(_) {}
+      })();
+
+      // Polling extra (caso o popup feche antes do setItem propagar)
+      (function pollForToken(){
+        let tries = 0;
+        const maxTries = 60; // ~18s
+        const iv = setInterval(() => {
+          tries++;
+          try {
+            const t1 = localStorage.getItem("decap_token");
+            const t2 = (() => { try { return JSON.parse(localStorage.getItem("netlify-cms-user")||"{}").token; } catch(_){ return null }})();
+            const t3 = (() => { try { return JSON.parse(localStorage.getItem("decap-cms-auth")||"{}").token; } catch(_){ return null }})();
+            const t = t1 || t2 || t3;
+            if (t) {
+              localStorage.removeItem("decap_token");
+              finishLogin(t);
+              clearInterval(iv);
+            }
+          } catch(_) {}
+          if (tries >= maxTries) clearInterval(iv);
+        }, 300);
+      })();
+    </script>
+
   </body>
 </html>
