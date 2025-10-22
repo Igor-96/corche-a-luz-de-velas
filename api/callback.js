@@ -14,37 +14,28 @@ export default async function handler(req, res) {
         redirect_uri: process.env.OAUTH_REDIRECT_URI
       })
     });
-    const data = await gh.json();
 
+    const data = await gh.json();
     const token = data.access_token;
     if (!token) throw new Error('No access_token from GitHub');
 
-    // Cookie de fallback (não é obrigatório para o Decap, mas ajuda)
+    // Cookie só como fallback (não é o que o Decap usa de fato)
     res.setHeader('Set-Cookie', [
       `decap_token=${token}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=3600`
     ]);
 
-    // Resposta no formato esperado pelo Decap CMS (popup -> postMessage -> close)
-    const payload = JSON.stringify({ token, provider: 'github' });
+    // HTML exato que o Decap espera (popup -> postMessage -> close)
     const html = `<!doctype html>
 <html>
-  <head><meta charset="utf-8" /><title>Auth</title></head>
+  <head><meta charset="utf-8"><title>Auth</title></head>
   <body>
     <script>
       (function () {
-        function send(status, data) {
-          var msg = 'authorization:github:' + status + ':' + JSON.stringify(data);
-          // envia para a janela que abriu o popup
-          if (window.opener) {
-            window.opener.postMessage(msg, '*');
-          }
-          window.close();
-        }
+        var msg = 'authorization:github:success:' + JSON.stringify({ token: ${JSON.stringify(token)} });
         try {
-          var data = ${payload};
-          send('success', data);
-        } catch (e) {
-          send('error', {message: e && e.message ? e.message : 'unknown'});
+          if (window.opener) window.opener.postMessage(msg, '*');
+        } finally {
+          window.close();
         }
       })();
     </script>
@@ -53,7 +44,6 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.status(200).send(html);
   } catch (e) {
-    // Também devolve HTML de erro no formato que o Decap entende
     const html = `<!doctype html>
 <html><body><script>
   (function () {
