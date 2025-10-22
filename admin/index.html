@@ -100,5 +100,29 @@
        })();
       </script>
 
+      <script>
+  // --- POLLING: procura pelo token salvo pelo /api/callback ---
+      (function pollForToken(){
+        let tries = 0;
+        const maxTries = 60;   // ~18s (60 * 300ms)
+
+        const iv = setInterval(() => {
+          tries++;
+          try {
+            const t = localStorage.getItem("decap_token");
+            if (t) {
+              localStorage.removeItem("decap_token");
+              if (window.CMS && CMS.oauthComplete) {
+                CMS.oauthComplete({ token: t, provider: "github" });
+              }
+              clearInterval(iv);
+            }
+          } catch(e){ /* ignore */ }
+
+          if (tries >= maxTries) clearInterval(iv);
+         }, 300);
+       })();
+      </script>
+
   </body>
 </html>
