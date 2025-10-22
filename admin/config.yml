@@ -4,6 +4,7 @@ backend:
   branch: main
   base_url: https://crochealuzdevelas.vercel.app
   auth_endpoint: /api/authorize
+site_url: https://crochealuzdevelas.vercel.app
   
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
