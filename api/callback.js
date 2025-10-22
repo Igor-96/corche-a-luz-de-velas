@@ -39,21 +39,36 @@ export default async function handler(req, res) {
     }
 
     const token = data.access_token;
+    // ... depois de obter: const token = data.access_token;
+
     const html = `<!doctype html><html><body><script>
       (function () {
         try {
-          try { localStorage.setItem("decap_token", "${token}"); } catch (e) {}
+          // Salva o token em múltiplas chaves que o Decap/Netlify usam
+          try {
+            localStorage.setItem("decap_token", "${token}");
+            localStorage.setItem("netlify-cms-user", JSON.stringify({ token: "${token}", provider: "github" }));
+            localStorage.setItem("decap-cms-auth", JSON.stringify({ token: "${token}", provider: "github" }));
+          } catch (e) {}
+
           if (window.opener) {
+            // Envia nos formatos moderno e legados
             try { window.opener.postMessage({ token: "${token}", provider: "github" }, "*"); } catch (e) {}
             try { window.opener.postMessage("authorization:github:${token}", "*"); } catch (e) {}
-            try { var ev = new CustomEvent("authorization:github", { detail: { token: "${token}" }}); window.opener.dispatchEvent(ev); } catch (e) {}
+            try {
+              var ev = new CustomEvent("authorization:github", { detail: { token: "${token}" }});
+              window.opener.dispatchEvent(ev);
+            } catch (e) {}
             window.close();
           } else {
             document.body.innerText = "OAuth OK. Token: ${token}";
           }
-        } catch (e) { document.body.innerText = "OAuth error: " + (e && e.message ? e.message : e); }
+        } catch (e) {
+          document.body.innerText = "OAuth error: " + (e && e.message ? e.message : e);
+        }
       })();
     </script></body></html>`;
+
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.status(200).send(html);
