@@ -6,8 +6,10 @@
     <title>Admin</title>
   </head>
   <body>
-    <!-- Carrega automaticamente o Decap CMS e lê admin/config.yml -->
-    <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"></script>
+    <!-- Força o Decap a carregar /admin/config.yml e com cache-buster -->
+    <script
+      src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"
+      data-config-path="/admin/config.yml?ts=2">
+    </script>
   </body>
 </html>
-
