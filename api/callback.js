@@ -66,6 +66,9 @@ export default async function handler(req, res) {
         } catch (e) {
           document.body.innerText = "OAuth error: " + (e && e.message ? e.message : e);
         }
+        try {
+          localStorage.setItem("decap_token", "${token}");
+        } catch (e) {}
       })();
     </script></body></html>`;
 
