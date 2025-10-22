@@ -1,2 +1,68 @@
 <!doctype html>
-<html lang="pt-br"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Admin</title></head><body><script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script></body></html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin</title>
+  </head>
+  <body>
+    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+
+    <script>window.CMS_MANUAL_INIT = true;</script>
+    <script>
+      CMS.init({
+        config: {
+          backend: {
+            name: "github",
+            repo: "Igor-96/corche-a-luz-de-velas",   // o nome EXATO do seu repo no GitHub
+            branch: "main",
+            base_url: "https://crochealuzdevelas.vercel.app",
+            auth_endpoint: "/api/authorize"
+          },
+          media_folder: "assets/uploads",
+          public_folder: "/assets/uploads",
+          collections: [
+            {
+              name: "catalogo",
+              label: "Catálogo",
+              files: [
+                {
+                  file: "data/content.json",
+                  label: "Conteúdo da Loja",
+                  name: "conteudo",
+                  fields: [
+                    { label:"Produtos (home)", name:"PRODUCTS", widget:"list", fields:[
+                      {label:"ID", name:"id", widget:"string"},
+                      {label:"Título", name:"title", widget:"string"},
+                      {label:"Preço", name:"price", widget:"number", value_type:"float"},
+                      {label:"Tag", name:"tag", widget:"string"},
+                      {label:"Imagem", name:"img", widget:"image"},
+                      {label:"Destaque", name:"featured", widget:"boolean", default:false},
+                      {label:"Descrição", name:"blurb", widget:"text", required:false}
+                    ]},
+                    { label:"Crochês", name:"CROCHES", widget:"list", fields:[
+                      {label:"ID", name:"id", widget:"string"},
+                      {label:"Título", name:"title", widget:"string"},
+                      {label:"Preço", name:"price", widget:"number", value_type:"float"},
+                      {label:"Tag", name:"tag", widget:"string"},
+                      {label:"Imagem", name:"img", widget:"image"},
+                      {label:"Descrição", name:"blurb", widget:"text", required:false}
+                    ]},
+                    { label:"Velas", name:"VELAS", widget:"list", fields:[
+                      {label:"ID", name:"id", widget:"string"},
+                      {label:"Título", name:"title", widget:"string"},
+                      {label:"Preço", name:"price", widget:"number", value_type:"float"},
+                      {label:"Tag", name:"tag", widget:"string"},
+                      {label:"Imagem", name:"img", widget:"image"},
+                      {label:"Descrição", name:"blurb", widget:"text", required:false}
+                    ]}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      });
+    </script>
+  </body>
+</html>
