@@ -69,6 +69,36 @@
           ]
         }
       });
-    </script>
+      </script>
+    
+      <script>
+      // 1) Listener normal (quando o popup envia postMessage)
+      window.addEventListener("message", (e) => {
+        try {
+          // formatos que o callback envia
+          if (typeof e.data === "string" && e.data.startsWith("authorization:github:")) {
+            const token = e.data.split(":").pop();
+            if (window.CMS && CMS.oauthComplete) CMS.oauthComplete({ token, provider: "github" });
+            return;
+          }
+          if (e.data && e.data.token) {
+            if (window.CMS && CMS.oauthComplete) CMS.oauthComplete({ token: e.data.token, provider: "github" });
+            return;
+          }
+        } catch(_) {}
+      }, false);
+
+      // 2) Fallback: busca token salvo no localStorage pelo callback
+      (function pickupLocalToken(){
+        try {
+          const t = localStorage.getItem("decap_token");
+          if (t) {
+            localStorage.removeItem("decap_token");
+            if (window.CMS && CMS.oauthComplete) CMS.oauthComplete({ token: t, provider: "github" });
+          }
+         } catch(_) {}
+       })();
+      </script>
+
   </body>
 </html>
