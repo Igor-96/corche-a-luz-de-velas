@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crochê à Luz de Velas — Loja Online</title>
+  <meta name="description" content="Peças de crochê artesanais feitas à mão, criadas com calma, afeto e um toque de luz. Compre mantas, sousplats, capas de almofada e acessórios sustentáveis." />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;600;700&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7f5f2;
+      --paper:#ffffff;
+      --ink:#1f1f1f;
+      --muted:#6f6b66;
+      --brand:#b47b5f;
+      --brand-2:#2b2a28;
+      --success:#2e7d32;
+      --warn:#b00020;
+      --radius:18px;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --grid: minmax(0, 1fr);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Archivo, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--ink); background:var(--bg);
+      line-height:1.45; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    }
+    a{color:inherit; text-decoration:none}
+    img{max-width:100%; display:block}
+
+    .container{width:min(1200px, 92vw); margin-inline:auto}
+    header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(6px)}
+    .nav{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 0}
+    .logo{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.6px}
+    .logo-mark{width:34px; height:34px; border-radius:50%; background:radial-gradient(90% 90% at 30% 25%, #ffd7ae, #f4b47c 45%, #b47b5f); box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.06), 0 4px 14px rgba(0,0,0,.15)}
+    .logo span{font-family:"Playfair Display", serif; font-weight:600}
+    .pill{display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:999px; background:var(--paper); box-shadow:var(--shadow)}
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 18px; border-radius:999px; font-weight:600; cursor:pointer; border:1px solid transparent}
+    .btn.primary{background:var(--brand); color:#fff}
+    .btn.primary:hover{filter:brightness(.98)}
+    .btn.ghost{background:transparent; border-color:#d9d2cc; color:var(--brand-2)}
+
+    .hero{position:relative; padding:96px 0 56px}
+    .hero.has-bg{background-image:url('assets/hero.png'); background-color:#0f0e0d; background-repeat:no-repeat; background-position:center 12%; background-size:80vmin auto; min-height:88vh;}
+    .hero.has-bg::before{content:""; position:absolute; inset:0; background:rgba(0,0,0,.18)}
+    .hero .container{position:relative; z-index:1}
+    .hero-grid{display:grid; grid-template-columns:1fr; gap:28px}
+    .hero-cards-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+      max-width: 1200px;
+      margin: 6vh auto 0 auto;
+      padding: 0;
+      position: relative;
+      pointer-events: none; /* para não bloquear overlays do hero */
+    }
+    .hero-card.hero-left-only,
+    .hero-card.hero-right-only {
+      width: 420px;
+      background: rgba(255,255,255,0.08);
+      color:#f5f1e9;
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter:blur(2px);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      padding:22px 22px 28px;
+      text-alignn:center;
+      pointer-events: auto;
+    }
+    .hero-card.hero-left-only { transform: translateX(-60%); }
+    .hero-card.hero-right-only { transform: translateX(60%); }
+    
+    }
+    .hero-card.hero-left-only {
+      text-alignn: left;
+    }
+    .hero-card.hero-right-only {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      text-alignn: right;
+      transform: translateX(60%);
+    }
+    .hero.has-bg .hero-card .btn.ghost {
+      background: rgba(255,255,255,0.10); /* leve fundo claro */
+      border-color: rgba(255,255,255,0.18);
+      color: #ffffff;                      /* texto branco */
+    }
+    .floating-candles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none; /* não atrapalha cliques */
+      overflow: visible;
+      z-index: 5; /* acima do hero content (hero .container tem z-index:1) */
+    }
+
+    /* Cada vela */
+    .floating-candle {
+      position: absolute;
+      bottom: 10px;
+      transform-origin: center bottom;
+      will-change: transform, opacity;
+      opacity: 0;
+    }
+
+    /* aparência da vela (usando emoji; você pode substituir por SVG) */
+    .floating-candle .candle-emoji{
+      display: inline-block;
+      font-size: var(--size, 18px);
+      line-height: 1;
+      text-shadow: 0 4px 12px rgba(0,0,0,.25);
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,.12));
+      transform: translateY(0);
+    }
+
+    /* animação: sobe, se desloca e some */
+    @keyframes floatUp {
+      0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+      6%   { opacity: 1; }
+      100% { transform: translateY(-120vh) translateX(var(--sway, 0px)) rotate(var(--rot, 10deg)); opacity: 0; }
+    }
+
+    /* animação de tremulação leve (opcional) */
+    @keyframes flicker {
+      0% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-2px) scale(1.02); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    /* aplicar animação — duração e delay serão controlados inline via JS */
+    .floating-candle {
+      animation-name: floatUp;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+    
+    @media (max-width: 1000px) {
+      .hero-cards-flex {
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+      }
+      .hero-card.hero-left-only, .hero-card.hero-right-only {
+        width: 98%;
+        max-width: 500px;
+        text-alignn: center;
+        align-items: center;
+      }
+      .hero-card.hero-right-only {
+        align-items: center;
+        justify-content: flex-start;
+      }
+    }
+    }
+    .hero-card{ 
+      background:rgba(255,255,255,0.08); color:#f5f1e9; border:1px solid rgba(255,255,255,.14); backdrop-filter:blur(2px); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; padding:22px 22px 28px; max-width:760px; margin:40vh auto 0; text-alignn:center
+    }
+    .hero h1{font-family:"Playfair Display", serif; font-size:clamp(32px, 4.2vw, 54px); line-height:1.05; margin:0}
+    .hero p{color:var(--muted); font-size:clamp(15px,1.6vw,18px)}
+    .hero-cta{display:flex; gap:12px; flex-wrap:wrap; margin-top:14px}
+
+    .badges{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    .badge{font-size:12px; padding:8px 12px; border-radius:999px; background:#fff2e7; color:#874f35; border:1px solid #f2d3bf}
+
+    section{padding:32px 0}
+    .section-title{display:flex; align-items:end; justify-content:space-between; gap:14px; margin-bottom:12px}
+    .section-title h2{font-family:"Playfair Display", serif; font-size:clamp(22px,2.6vw,34px); margin:0}
+    .muted{color:var(--muted)}
+
+    .grid{display:grid; grid-template-columns:repeat(12, 1fr); gap:18px}
+    .product{grid-column: span 4; background:var(--paper); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); display:flex; flex-direction:column}
+    .product .media{aspect-ratio: 1/1; background:linear-gradient(120deg,#fff,#f6efe8)}
+    .product .body{padding:14px 14px 16px}
+    .price{font-weight:700}
+    .swatches{display:flex; gap:8px; margin:8px 0 2px}
+    .dot{width:18px; height:18px; border-radius:50%; border:1px solid rgba(0,0,0,.12); box-shadow:inset 0 0 0 2px rgba(255,255,255,.7)}
+    .actions{margin-top:10px; display:flex; gap:8px}
+
+    .card{background:var(--paper); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow)}
+
+    .about{display:grid; grid-template-columns: .9fr 1.1fr; gap:22px}
+    .about blockquote{margin:0; padding-left:16px; border-left:3px solid #e9ded4; color:var(--muted)}
+
+    footer{padding:40px 0 80px; margin-top:32px; background:linear-gradient(180deg,rgba(0,0,0,0) 0,#efeae5 100%)}
+    .footer-grid{display:grid; grid-template-columns: 1.2fr .8fr .8fr; gap:18px}
+    .small{font-size:13px}
+
+    .drawer{position:fixed; right:0; top:0; bottom:0; width:min(440px, 92vw); background:var(--paper); box-shadow:-10px 0 30px rgba(0,0,0,.18); transform:translateX(110%); transition:transform .35s ease; z-index:100}
+    .drawer.open{transform:translateX(0)}
+    .drawer header{position:sticky; top:0; background:var(--paper); border-bottom:1px solid #eee}
+    .drawer .pad{padding:16px}
+    .cart-line{display:grid; grid-template-columns: 56px 1fr auto; gap:10px; align-items:center; padding:10px 0; border-bottom:1px dashed #eee}
+    .qty{display:inline-flex; align-items:center; gap:6px; border:1px solid #e8e4de; border-radius:999px; padding:4px 8px}
+    .checkout{display:flex; flex-direction:column; gap:10px}
+    .input{width:100%; padding:12px 14px; border:1px solid #e1ddd6; border-radius:12px; background:#fff}
+
+    @media (max-width: 980px){
+      .about{grid-template-columns:1fr}
+      .grid .product{grid-column: span 6}
+      .footer-grid{grid-template-columns: 1fr 1fr}
+      .hero-card.hero-split {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 24px;
+        padding: 22px 18px 28px;
+        margin: 40vh auto 0;
+      }
+      .hero-card.hero-split .hero-right {
+        align-items: flex-start;
+      }
+    }
+    @media (max-width: 640px){
+      .grid .product{grid-column: span 12}
+      .pill{display:none}
+    .collection-main {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+      margin-top: 16px;
+    }
+    .collection-block {
+      flex: 1 1 0;
+    }
+    .collection-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+  }
+    @media (max-width: 900px){
+      .collection-main { flex-direction: column; gap: 28px; }
+      .collection-block { width: 100%; }
+  }
+    .collection-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 40px !important;
+      flex-wrap: wrap;
+      min-height: 40px !important;
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Crochê à Luz de Velas",
+    "url": "https://www.exemplo.com/",
+    "logo": "https://www.exemplo.com/logo.png",
+    "sameAs": ["https://www.instagram.com/crochealuzdevelas/"]
+  }
+  </script>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="logo" href="#top" aria-label="Crochê à Luz de Velas">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span>Crochê à Luz de Velas</span>
+      </a>
+      <nav class="pill">
+        <a href="#destaques">Destaques</a>
+        <span>·</span>
+        <a href="#colecao">Coleção</a>
+        <span>·</span>
+        <a href="#sobre">Sobre</a>
+        <span>·</span>
+        <a href="#contato">Contato</a>
+      </nav>
+      <button class="btn ghost" onclick="openCart()" aria-label="Abrir carrinho">🧺 Carrinho <span id="cartCount" style="margin-left:6px; font-weight:700">0</span></button>
+    </div>
+  </header>
+
+  <section class="hero has-bg">
+  <div class="container hero-grid"></div>
+  <div class="hero-cards-flex">
+      <div class="hero-card hero-left-only">
+        <div class="badges">
+          <span class="badge">Feito à mão</span>
+          <span class="badge">Fios naturais</span>
+          <span class="badge">Produção consciente</span>
+        </div>
+        <h1 style="margin-top:10px">Crochê que aquece, velas que encantam.</h1>
+        <p>Peças artesanais criadas ponto a ponto, ao ritmo da luz. Descubra mantas, sousplats, capas de almofada e velas aromaticas especiais que transformam a casa em abrigo.</p>
+      </div>
+      <div class="hero-card hero-right-only">
+        <div class="hero-cta">
+          <a class="btn primary" href="#destaques">Ver novidades</a>
+          <a class="btn ghost" href="#colecao">Comprar coleção</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <section id="destaques">
+    <div class="container">
+      <div class="section-title">
+        <h2>Destaques da semana</h2>
+        <p class="muted small">Edição limitada · envio em até 3 dias úteis</p>
+      </div>
+      <div class="grid" id="featuredGrid"></div>
+    </div>
+  </section>
+
+  <section id="colecao">
+    <div class="container">
+      <div class="section-title">
+        <h2>Coleção</h2>
+      </div>
+      <div class="collection-main">
+        <div class="collection-block">
+          <h3>Crochês</h3>
+          <div class="collection-filters">
+            <button class="btn ghost small" onclick="filterCroche('todos')">Todos</button>
+            <button class="btn ghost small" onclick="filterCroche('mantas')">Mantas</button>
+            <button class="btn ghost small" onclick="filterCroche('decor')">Decoração</button>
+            <button class="btn ghost small" onclick="filterCroche('mesa')">Mesa posta</button>
+          </div>
+          <div class="grid" id="crocheGrid"></div>
+        </div>
+        <div class="collection-block">
+          <h3>Velas</h3>
+          <div class="collection-filters">
+            <button class="btn ghost small" onclick="filterVela('todos')">Todos</button>
+            <button class="btn ghost small" onclick="filterVela('aromaticas')">Aromáticas</button>
+            <button class="btn ghost small" onclick="filterVela('decorativas')">Decorativas</button>
+            <button class="btn ghost small" onclick="filterVela('personalizadas')">Personalizadas</button>
+          </div>
+          <div class="grid" id="velaGrid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sobre">
+    <div class="container about">
+      <div class="card">
+        <h2 style="margin-top:0">Sobre a marca</h2>
+        <p>Na <strong>Crochê à Luz de Velas</strong>, cada peça nasce de horas calmas, fio a fio, guiadas por um olhar atento ao detalhe. Trabalhamos com materiais de origem responsável e priorizamos produção sob demanda, que nasce na nossa casa para aconchegar a sua.</p>
+        <blockquote>“Crochê é pausa. É abrigo. É o aconchego do feito à mão que atravessa gerações.”</blockquote>
+        <p class="muted">Pequenos lotes · Embalagem reciclável · Cuidados e reparos sob consulta</p>
+      </div>
+      <div class="card" style="display:grid; gap:12px">
+        <h3 style="margin:0">Perguntas frequentes</h3>
+        <details><summary>Como cuidar das peças?</summary>
+          <p>Lavar à mão com água fria e sabão neutro. Secar à sombra, em superfície plana. Evitar torcer.</p>
+        </details>
+        <details><summary>Quais são os prazos de envio?</summary>
+          <p>Pedidos em estoque são enviados em 1–3 dias úteis. Para sob encomenda, considere 7–30 dias, dependendo do pedido.</p>
+        </details>
+        <details><summary>Vocês fazem sob medida?</summary>
+          <p>Sim! Fale conosco pelo WhatsApp com medidas, referências de cor e prazo desejado.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="section-title"><h2>O que dizem</h2><p class="muted small">Avaliações reais de clientes</p></div>
+      <div class="grid">
+        <div class="card" style="grid-column: span 4">“A manta ficou perfeita no meu sofá — macia e com um caimento impecável.” <div class="muted small">— Júlia, Cotia - SP</div></div>
+        <div class="card" style="grid-column: span 4">“Os sousplats deram um toque colorido para o meu jantar. Recomendo.” <div class="muted small">— Ricardo, Osasco - SP</div></div>
+        <div class="card" style="grid-column: span 4">“Atendimento carinhoso e entrega rápida. Vou comprar novamente.” <div class="muted small">— Ana, São Paulo - SP</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contato">
+    <div class="container">
+      <div class="section-title"><h2>Fale conosco</h2><p class="muted small">Encomendas sob medida, parcerias e atacado</p></div>
+      <div class="grid">
+        <form class="card" style="grid-column: span 7; display:grid; gap:10px" onsubmit="event.preventDefault(); toast('Mensagem enviada! Responderemos em breve.'); this.reset();">
+          <input class="input" name="nome" placeholder="Seu nome" required>
+          <input class="input" name="email" placeholder="Seu e-mail" type="email" required>
+          <textarea class="input" name="mensagem" rows="5" placeholder="Conte-nos o que você procura"></textarea>
+          <button class="btn primary" type="submit">Enviar</button>
+        </form>
+        <div class="card" style="grid-column: span 5">
+          <h3 style="margin-top:0">Newsletter</h3>
+          <p class="muted">Receba pré-vendas e cores exclusivas.</p>
+          <form onsubmit="event.preventDefault(); toast('Inscrição confirmada!'); this.reset();" style="display:flex; gap:8px; flex-wrap:wrap">
+            <input class="input" type="email" placeholder="Seu e-mail" required style="flex:1 1 260px">
+            <button class="btn primary" type="submit">Quero receber</button>
+          </form>
+          <div style="height:18px"></div>
+          <p class="small">Ou chame no WhatsApp: <a href="https://wa.me/351910000000" target="_blank" rel="noopener">+55 11 000 0000</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container footer-grid">
+      <div>
+        <div class="logo" style="margin-bottom:12px"><span class="logo-mark"></span><span>Crochê à Luz de Velas</span></div>
+        <p class="small muted">© <span id="year"></span> Crochê à Luz de Velas. Artesanato com afeto, feito em casa.</p>
+      </div>
+      <div>
+        <h4>Atendimento</h4>
+        <p class="small">Email: <a href="mailto:crochevelas@gmail.com">crochevelas@gmail.com</a><br>WhatsApp: <a href="https://wa.me/351910000000" target="_blank" rel="noopener">+351 91 000 0000</a></p>
+      </div>
+      <div>
+        <h4>Políticas</h4>
+        <p class="small"><a href="#">Envios & Devoluções</a><br><a href="#">Termos de uso</a><br><a href="#">Privacidade</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <aside class="drawer" id="drawer">
+    <header>
+      <div class="pad" style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+        <strong>Seu carrinho</strong>
+        <button class="btn ghost" onclick="closeCart()">Fechar ✕</button>
+      </div>
+    </header>
+    <div class="pad" id="cartLines"></div>
+    <div class="pad" style="border-top:1px solid #eee">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
+        <span class="muted">Subtotal</span>
+        <strong id="subtotal">R$0,00</strong>
+      </div>
+      <div class="checkout">
+        <input class="input" id="buyerName" placeholder="Seu nome" />
+        <input class="input" id="buyerEmail" placeholder="Seu e-mail" type="email" />
+        <button class="btn primary" onclick="checkoutWhatsApp()">Finalizar pelo WhatsApp</button>
+        <button class="btn ghost" onclick="exportOrder()">Exportar pedido (.json)</button>
+        <p class="small muted">Pagamento seguro por link (Stripe/Mercado Pago) enviado após confirmação. Frete calculado no fechamento.</p>
+      </div>
+      <div id="mercado-pago-btn">
+      </div>
+    </div>
+  </aside>
+
+  <div id="toast" style="position:fixed; left:50%; transform:translateX(-50%); bottom:24px; background:#212121; color:#fff; padding:10px 14px; border-radius:999px; opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:200"></div>
+  
+  <script>
+    const CURRENCY = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    const GRAY_PLACEHOLDER = 'https://via.placeholder.com/600x600/cccccc/cccccc';
+
+    let PRODUCTS = [
+      {id:'manta-aurora', title:'Manta Aurora', price:89.9, tag:'mantas',
+        colors:['#e7d1c8','#c7b8a8','#2b2a28'], img:GRAY_PLACEHOLDER, featured:true,
+        blurb:'Ponto aberto com caimento leve e toque macio.'},
+      {id:'almofada-orvalho', title:'Capa de Almofada Orvalho', price:24.9, tag:'decor',
+        colors:['#d9d9d9','#caa889','#1f1f1f'], img:GRAY_PLACEHOLDER, featured:true,
+        blurb:'Textura marcante para compor o sofá ou cama.'},
+      {id:'sousplat-lua', title:'Sousplat Lua (jogo c/2)', price:29.9, tag:'mesa',
+        colors:['#efefef','#b47b5f','#2b2a28'], img:GRAY_PLACEHOLDER, featured:false,
+        blurb:'Acabamento reforçado e fácil de cuidar.'},
+      {id:'caminho-sol', title:'Caminho de Mesa Sol', price:49.0, tag:'mesa',
+        colors:['#f2d3bf','#ffd7ae','#874f35'], img:GRAY_PLACEHOLDER, featured:true,
+        blurb:'Ilumina a mesa com pontos clássicos.'},
+      {id:'cachecol-bruma', title:'Cachecol Bruma', price:34.5, tag:'decor',
+        colors:['#2b2a28','#c7b8a8','#ffffff'], img:GRAY_PLACEHOLDER, featured:false,
+        blurb:'Conforto diário com fios macios.'},
+      {id:'manta-noite', title:'Manta Noite', price:99.0, tag:'mantas',
+        colors:['#2b2a28','#e6e0da','#b47b5f'], img:GRAY_PLACEHOLDER, featured:false,
+        blurb:'Trama densa, perfeita para o sofá.'}
+    ];
+
+    const featuredGrid = document.getElementById('featuredGrid');
+    
+
+    function swatchesHTML(colors){
+      return `<div class="swatches">${colors.map(c=>`<span class="dot" style="background:${c}"></span>`).join('')}</div>`
+    }
+    function productCard(p){
+      return `<article class="product" data-tag="${p.tag}">
+        <div class="media"><img src="${p.img}" alt="${p.title}"></div>
+        <div class="body">
+          <div style="display:flex; align-items:start; justify-content:space-between; gap:10px">
+            <div>
+              <h3 style="margin:0 0 4px 0; font-size:18px">${p.title}</h3>
+              <p class="muted small" style="margin:0">${p.blurb}</p>
+              ${swatchesHTML(p.colors)}
+            </div>
+            <div class="price">${CURRENCY.format(p.price)}</div>
+          </div>
+          <div class="actions">
+            <button class="btn primary" onclick='addToCart(${JSON.stringify(p)})'>Adicionar</button>
+            <button class="btn ghost" onclick='viewDetails(${JSON.stringify(p)})'>Detalhes</button>
+          </div>
+        </div>
+      </article>`
+    }
+
+    let CROCHES = [
+      {id:'manta-aurora', title:'Manta Aurora', price:89.9, tag:'mantas', type:'croche',
+        colors:['#e7d1c8','#c7b8a8','#2b2a28'], img:GRAY_PLACEHOLDER, featured:true,
+        blurb:'Ponto aberto com caimento leve e toque macio.'},
+      // ...outros crochês
+    ];
+
+    let VELAS = [
+      {id:'vela-aromatica', title:'Vela Aromática Lavanda', price:29.9, tag:'aromaticas', type:'vela',
+        colors:['#fff9e7','#d9c6b8'], img:GRAY_PLACEHOLDER, featured:true,
+        blurb:'Lavanda para relaxar o ambiente.'},
+      // ...outras velas
+    ];
+
+      // Renderização
+    const crocheGrid = document.getElementById('crocheGrid');
+    const velaGrid = document.getElementById('velaGrid');
+
+    function productCard(p){
+      return `<article class="product" data-tag="${p.tag}" data-type="${p.type}">
+        <div class="media"><img src="${p.img}" alt="${p.title}"></div>
+        <div class="body">
+          <div style="display:flex; align-items:start; justify-content:space-between; gap:10px">
+            <div>
+              <h3 style="margin:0 0 4px 0; font-size:18px">${p.title}</h3>
+              <p class="muted small" style="margin:0">${p.blurb}</p>
+              ${swatchesHTML(p.colors)}
+            </div>
+            <div class="price">${CURRENCY.format(p.price)}</div>
+          </div>
+          <div class="actions">
+            <button class="btn primary" onclick='addToCart(${JSON.stringify(p)})'>Adicionar</button>
+            <button class="btn ghost" onclick='viewDetails(${JSON.stringify(p)})'>Detalhes</button>
+          </div>
+        </div>
+      </article>`
+    }
+
+    function renderColecao(){
+      crocheGrid.innerHTML = CROCHES.map(productCard).join('');
+      velaGrid.innerHTML   = VELAS.map(productCard).join('');
+    }
+    renderColecao();
+
+    // Filtros
+    function filterCroche(tag){
+      [...crocheGrid.children].forEach(card=>{
+        card.style.display = (tag==='todos' || card.dataset.tag===tag) ? '' : 'none';
+      });
+    }
+    function filterVela(tag){
+      [...velaGrid.children].forEach(card=>{
+        card.style.display = (tag==='todos' || card.dataset.tag===tag) ? '' : 'none';
+      });
+    }
+    function render(){
+      featuredGrid.innerHTML = PRODUCTS.filter(p=>p.featured).map(productCard).join('');
+      
+    }
+
+    function filterTag(tag){
+      /* filtro inativo: grid de produtos não está presente nesta versão */
+      
+    }
+
+    const CART_KEY = 'clv_cart_v1';
+    const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+
+    function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); updateCartCount(); renderCart(); }
+    function updateCartCount(){
+      document.getElementById('cartCount').textContent = cart.reduce((s,l)=>s+l.qty,0);
+    }
+
+    function addToCart(p){
+      const line = cart.find(l=>l.id===p.id);
+      if(line) line.qty++; else cart.push({id:p.id, title:p.title, price:p.price, img:p.img, qty:1});
+      saveCart(); toast('Adicionado ao carrinho');
+    }
+
+    function removeFromCart(id){
+      const idx = cart.findIndex(l=>l.id===id);
+      if(idx>-1){ cart.splice(idx,1); saveCart(); }
+    }
+
+    function changeQty(id, delta){
+      const line = cart.find(l=>l.id===id); if(!line) return; line.qty = Math.max(1, line.qty+delta); saveCart();
+    }
+
+    function renderCart(){
+      const wrap = document.getElementById('cartLines');
+      if(!wrap) return;
+      if(cart.length===0){ wrap.innerHTML = '<p class="muted">Seu carrinho está vazio.</p>'; document.getElementById('subtotal').textContent = CURRENCY.format(0); return; }
+      wrap.innerHTML = cart.map(l=>`
+        <div class="cart-line">
+          <img src="${l.img}" alt="${l.title}" style="width:56px; height:56px; object-fit:cover; border-radius:8px"/>
+          <div>
+            <div style="font-weight:600">${l.title}</div>
+            <div class="qty">
+              <button class="btn ghost" style="padding:4px 10px" onclick="changeQty('${l.id}', -1)">–</button>
+              <span>${l.qty}</span>
+              <button class="btn ghost" style="padding:4px 10px" onclick="changeQty('${l.id}', 1)">+</button>
+            </div>
+          </div>
+          <div style="text-alignn:right">
+            <div>${CURRENCY.format(l.price*l.qty)}</div>
+            <button class="btn ghost small" style="padding:4px 10px; margin-top:6px" onclick="removeFromCart('${l.id}')">Remover</button>
+          </div>
+        </div>
+      `).join('');
+      const subtotal = cart.reduce((s,l)=>s+l.price*l.qty,0);
+      document.getElementById('subtotal').textContent = CURRENCY.format(subtotal);
+      document.getElementById('mercado-pago-btn').innerHTML = ""; // Limpa o container
+      if (typeof MercadoPago !== "undefined") {
+        const mp = new MercadoPago('SUA_PUBLIC_KEY_AQUI', { locale: 'pt-BR' });
+        mp.checkout({
+          preference: { id: 'SUA_PREFERENCE_ID_AQUI' },
+          render: {
+            container: '#mercado-pago-btn',
+            label: 'Pagar com Mercado Pago'
+          }
+        });
+      }
+    }
+
+    function openCart(){ document.getElementById('drawer').classList.add('open'); renderCart(); }
+    function closeCart(){ document.getElementById('drawer').classList.remove('open'); }
+
+    let toastTimer;
+    function toast(msg){
+      const el = document.getElementById('toast');
+      el.textContent = msg; el.style.opacity = 1; clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=> el.style.opacity = 0, 2200);
+    }
+
+    function viewDetails(p){
+      alert(`${p.title}\n\n${p.blurb}\n\nCores disponíveis: ${p.colors.join(', ')}`);
+    }
+
+    function checkoutWhatsApp(){
+      if(cart.length===0){ toast('Adicione itens ao carrinho'); return; }
+      const name = document.getElementById('buyerName').value.trim() || 'Cliente';
+      const email= document.getElementById('buyerEmail').value.trim();
+      const lines = cart.map(l=> `• ${l.title} x${l.qty} — ${CURRENCY.format(l.price*l.qty)}`).join('%0A');
+      const total = CURRENCY.format(cart.reduce((s,l)=>s+l.price*l.qty,0));
+      const msg = `Olá! Sou ${name}. Gostaria de finalizar meu pedido:%0A${lines}%0A%0ASubtotal: ${total}%0AEmail: ${email || '—'}`;
+      window.open(`https://wa.me/351910000000?text=${msg}`, '_blank');
+    }
+
+    function exportOrder(){
+      if(cart.length===0){ toast('Carrinho vazio'); return; }
+      const payload = { items: cart, subtotal: cart.reduce((s,l)=>s+l.price*l.qty,0), currency:'BRL', buyer: {name:document.getElementById('buyerName').value, email:document.getElementById('buyerEmail').value} };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download = `pedido-croche-${Date.now()}.json`; a.click(); URL.revokeObjectURL(url);
+    }
+
+    (function createFloatingCandles(opts){
+      const {
+        count = 8,
+        containerSelector = '.hero',
+        emoji = '🕯️',
+        minSize = 14,
+        maxSize = 28,
+        minDuration = 8,
+        maxDuration = 18
+      } = (opts || {});
+
+      if (typeof window === 'undefined') return;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const container = document.querySelector(containerSelector);
+      if (!container) return;
+
+      // garante que container seja posição relativa/absoluta para posicionamento local
+      const containerStyle = getComputedStyle(container);
+      if (containerStyle.position === 'static') container.style.position = 'relative';
+
+      // wrapper que segura as velas
+      let wrapper = container.querySelector('.floating-candles');
+      if (!wrapper) {
+        wrapper = document.createElement('div');
+        wrapper.className = 'floating-candles';
+        container.appendChild(wrapper);
+      }
+
+      // função que cria uma vela
+      function makeCandle(i){
+        const el = document.createElement('div');
+        el.className = 'floating-candle';
+
+        const size = Math.round(minSize + Math.random()*(maxSize-minSize));
+        el.style.setProperty('--size', size + 'px');
+
+        // posição horizontal aleatória (percent)
+        const left = Math.random()*100;
+        el.style.left = left + '%';
+
+        // sway horizontal (px)
+        const sway = Math.round((Math.random()*120) - 60); // -60..+60 px
+        el.style.setProperty('--sway', sway + 'px');
+
+        // rotate final
+        const rot = Math.round((Math.random()*40) - 20); // -20..20deg
+        el.style.setProperty('--rot', rot + 'deg');
+
+        // duração e delay
+        const duration = (minDuration + Math.random()*(maxDuration-minDuration)).toFixed(2) + 's';
+        const delay = (Math.random()*6).toFixed(2) + 's';
+        el.style.animationDuration = duration;
+        el.style.animationDelay = delay;
+
+        // conteúdo: emoji (ou SVG se preferir)
+        const inner = document.createElement('span');
+        inner.className = 'candle-emoji';
+        inner.textContent = emoji;
+        // pequena animação de "tremulação" com transform para dar vida
+        inner.style.animation = 'flicker ' + (1.5 + Math.random()*1) + 's ease-in-out infinite';
+
+        el.appendChild(inner);
+        wrapper.appendChild(el);
+
+        // opcional: remover após um ciclo (se não quiser infinito)
+        // setTimeout(()=> el.remove(), (parseFloat(duration) + parseFloat(delay))*1000);
+      }
+
+      // cria as velas
+      for (let i=0;i<count;i++) makeCandle(i);
+
+    })( { count: 9, containerSelector: '.hero', emoji: '🕯️' } );
+    
+    render(); updateCartCount(); document.getElementById('year').textContent=new Date().getFullYear();
+  </script>
+
+<script>
+(function(){
+  async function loadContent(){
+    try{
+      const r = await fetch('/data/content.json', {cache:'no-store'});
+      if(!r.ok) return;
+      const data = await r.json();
+      if(Array.isArray(data.PRODUCTS)) PRODUCTS = data.PRODUCTS;
+      if(Array.isArray(data.CROCHES))  CROCHES  = data.CROCHES;
+      if(Array.isArray(data.VELAS))    VELAS    = data.VELAS;
+      if(typeof renderColecao==='function') renderColecao();
+      if(typeof render==='function') render();
+    }catch(e){ console.warn(e); }
+  }
+  document.addEventListener('DOMContentLoaded', loadContent);
+})();
+</script>
+
+</body>
+</html>

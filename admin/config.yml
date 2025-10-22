@@ -1,0 +1,44 @@
+backend:
+  name: github
+  repo: SEU-USUARIO/SEU-REPO
+  branch: main
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
+collections:
+  - name: "conteudo"
+    label: "Conteúdo da Loja"
+    files:
+      - file: "data/content.json"
+        label: "Catálogo"
+        name: "catalogo"
+        fields:
+          - label: "Produtos (home)"
+            name: "PRODUCTS"
+            widget: "list"
+            fields:
+              - {label: "ID", name: "id", widget: "string"}
+              - {label: "Título", name: "title", widget: "string"}
+              - {label: "Preço", name: "price", widget: "number", value_type: "float"}
+              - {label: "Tag", name: "tag", widget: "string"}
+              - {label: "Imagem", name: "img", widget: "image"}
+              - {label: "Descrição", name: "blurb", widget: "text", required: false}
+          - label: "Crochês"
+            name: "CROCHES"
+            widget: "list"
+            fields:
+              - {label: "ID", name: "id", widget: "string"}
+              - {label: "Título", name: "title", widget: "string"}
+              - {label: "Preço", name: "price", widget: "number", value_type: "float"}
+              - {label: "Tag", name: "tag", widget: "string"}
+              - {label: "Imagem", name: "img", widget: "image"}
+              - {label: "Descrição", name: "blurb", widget: "text", required: false}
+          - label: "Velas"
+            name: "VELAS"
+            widget: "list"
+            fields:
+              - {label: "ID", name: "id", widget: "string"}
+              - {label: "Título", name: "title", widget: "string"}
+              - {label: "Preço", name: "price", widget: "number", value_type: "float"}
+              - {label: "Tag", name: "tag", widget: "string"}
+              - {label: "Imagem", name: "img", widget: "image"}
+              - {label: "Descrição", name: "blurb", widget: "text", required: false}

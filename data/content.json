@@ -1,0 +1,14 @@
+{
+  "PRODUCTS": [
+    {
+      "id": "hero",
+      "title": "Coleção Crochê à Luz de Velas",
+      "price": 0,
+      "tag": "hero",
+      "img": "/assets/hero.png",
+      "blurb": "Atualize no /admin com suas fotos."
+    }
+  ],
+  "CROCHES": [],
+  "VELAS": []
+}
