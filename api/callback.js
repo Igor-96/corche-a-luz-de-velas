@@ -65,11 +65,16 @@ export default async function handler(req, res) {
 
     const token = data.access_token;
 
-    // Envia o token em TODOS os formatos aceitos (Decap/Netlify CMS)
+    // ...depois que você já obteve `const token = data.access_token;`
+
     const html = `<!doctype html><html><body><script>
       (function () {
         try {
+          // Salva no localStorage (mesmo domínio), como fallback
+          try { localStorage.setItem("decap_token", "${token}"); } catch (e) {}
+
           if (window.opener) {
+            // formatos modernos e legados
             try { window.opener.postMessage({ token: "${token}", provider: "github" }, "*"); } catch (e) {}
             try { window.opener.postMessage("authorization:github:${token}", "*"); } catch (e) {}
             try {
@@ -85,11 +90,3 @@ export default async function handler(req, res) {
         }
       })();
     </script></body></html>`;
-
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.status(200).send(html);
-  } catch (e) {
-    res.status(500).send(`<!doctype html><pre>Callback crashed:\n${e?.message || e}</pre>`);
-  }
-}
-
