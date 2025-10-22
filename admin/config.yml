@@ -1,50 +1,47 @@
 backend:
   name: github
-  repo: Igor-96/croche-a-luz-de-velas  
+  repo: Igor-96/corche-a-luz-de-velas
   branch: main
   base_url: https://crochealuzdevelas.vercel.app
   auth_endpoint: /api/authorize
-
+  
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
-
 collections:
-  - name: "catalogo"
-    label: "Catálogo"
+  - name: "conteudo"
+    label: "Conteúdo da Loja"
     files:
       - file: "data/content.json"
-        label: "Conteúdo da Loja"
-        name: "conteudo"
+        label: "Catálogo"
+        name: "catalogo"
         fields:
           - label: "Produtos (home)"
             name: "PRODUCTS"
             widget: "list"
             fields:
-              - { label: "ID", name: "id", widget: "string" }
-              - { label: "Título", name: "title", widget: "string" }
-              - { label: "Preço", name: "price", widget: "number", value_type: "float" }
-              - { label: "Tag", name: "tag", widget: "string" }
-              - { label: "Imagem", name: "img", widget: "image" }
-              - { label: "Destaque", name: "featured", widget: "boolean", default: false }
-              - { label: "Descrição", name: "blurb", widget: "text", required: false }
+              - {label: "ID", name: "id", widget: "string"}
+              - {label: "Título", name: "title", widget: "string"}
+              - {label: "Preço", name: "price", widget: "number", value_type: "float"}
+              - {label: "Tag", name: "tag", widget: "string"}
+              - {label: "Imagem", name: "img", widget: "image"}
+              - {label: "Descrição", name: "blurb", widget: "text", required: false}
           - label: "Crochês"
             name: "CROCHES"
             widget: "list"
             fields:
-              - { label: "ID", name: "id", widget: "string" }
-              - { label: "Título", name: "title", widget: "string" }
-              - { label: "Preço", name: "price", widget: "number", value_type: "float" }
-              - { label: "Tag", name: "tag", widget: "string" }
-              - { label: "Imagem", name: "img", widget: "image" }
-              - { label: "Descrição", name: "blurb", widget: "text", required: false }
+              - {label: "ID", name: "id", widget: "string"}
+              - {label: "Título", name: "title", widget: "string"}
+              - {label: "Preço", name: "price", widget: "number", value_type: "float"}
+              - {label: "Tag", name: "tag", widget: "string"}
+              - {label: "Imagem", name: "img", widget: "image"}
+              - {label: "Descrição", name: "blurb", widget: "text", required: false}
           - label: "Velas"
             name: "VELAS"
             widget: "list"
             fields:
-              - { label: "ID", name: "id", widget: "string" }
-              - { label: "Título", name: "title", widget: "string" }
-              - { label: "Preço", name: "price", widget: "number", value_type: "float" }
-              - { label: "Tag", name: "tag", widget: "string" }
-              - { label: "Imagem", name: "img", widget: "image" }
-              - { label: "Descrição", name: "blurb", widget: "text", required: false }
-
+              - {label: "ID", name: "id", widget: "string"}
+              - {label: "Título", name: "title", widget: "string"}
+              - {label: "Preço", name: "price", widget: "number", value_type: "float"}
+              - {label: "Tag", name: "tag", widget: "string"}
+              - {label: "Imagem", name: "img", widget: "image"}
+              - {label: "Descrição", name: "blurb", widget: "text", required: false}
