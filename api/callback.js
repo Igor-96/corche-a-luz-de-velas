@@ -1,5 +1,5 @@
-// Força runtime Node (serverless) — evita Edge quirks
-export const config = { runtime: "nodejs18.x" };
+// Usa runtime Node (não Edge)
+export const runtime = "nodejs";
 
 export default async function handler(req, res) {
   try {
@@ -7,17 +7,22 @@ export default async function handler(req, res) {
     const clientId = process.env.GITHUB_CLIENT_ID;
     const clientSecret = process.env.GITHUB_CLIENT_SECRET;
 
-    // Detecta domínio atual dinamicamente caso vc esqueça de atualizar a env
+    // Detecta o domínio atual se a ENV não estiver setada
     const proto = req.headers["x-forwarded-proto"] || "https";
     const host = req.headers.host;
     const redirectUri =
       process.env.OAUTH_REDIRECT_URI || `${proto}://${host}/api/callback`;
 
-    if (!code) return res.status(400).json({ error: "Missing code" });
-    if (!clientId || !clientSecret)
-      return res.status(500).json({ error: "Missing GITHUB_CLIENT_ID/SECRET envs" });
+    if (!code) {
+      res.status(400).json({ error: "Missing code" });
+      return;
+    }
+    if (!clientId || !clientSecret) {
+      res.status(500).json({ error: "Missing GITHUB_CLIENT_ID/SECRET envs" });
+      return;
+    }
 
-    // Troca o code por access_token (modo mais compatível)
+    // Troca do code por access_token (modo compatível)
     const body = new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
@@ -29,25 +34,38 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "application/json",
+        Accept: "application/json",
       },
       body,
     });
 
     const text = await tokenRes.text();
-    let data = {};
-    try { data = JSON.parse(text); } catch (_) {
-      // GitHub deveria devolver JSON, mas se não, joga o texto pro diagnóstico
-      return res.status(500).send(`<!doctype html><pre>Token exchange failed:\n${text}</pre>`);
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      res
+        .status(500)
+        .send(`<!doctype html><pre>Token exchange failed (non-JSON):\n${text}</pre>`);
+      return;
     }
 
     if (!tokenRes.ok || !data.access_token) {
-      return res.status(500).send(`<!doctype html><pre>GitHub error:\n${JSON.stringify(data, null, 2)}</pre>`);
+      res
+        .status(500)
+        .send(
+          `<!doctype html><pre>GitHub error during token exchange:\n${JSON.stringify(
+            data,
+            null,
+            2
+          )}</pre>`
+        );
+      return;
     }
 
     const token = data.access_token;
 
-    // Envia o token em TODOS os formatos aceitos
+    // Envia o token em TODOS os formatos aceitos (Decap/Netlify CMS)
     const html = `<!doctype html><html><body><script>
       (function () {
         try {
@@ -69,8 +87,9 @@ export default async function handler(req, res) {
     </script></body></html>`;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    return res.status(200).send(html);
+    res.status(200).send(html);
   } catch (e) {
-    return res.status(500).json({ error: e?.message || "callback failed" });
+    res.status(500).send(`<!doctype html><pre>Callback crashed:\n${e?.message || e}</pre>`);
   }
 }
+
