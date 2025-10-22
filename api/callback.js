@@ -10,9 +10,7 @@ export default async function handler(req, res) {
 
     if (!code) return res.status(400).json({ error: "Missing code" });
     if (!clientId || !clientSecret)
-      return res
-        .status(500)
-        .json({ error: "Missing GitHub OAuth env vars" });
+      return res.status(500).json({ error: "Missing GitHub OAuth env vars" });
 
     const r = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
@@ -33,24 +31,39 @@ export default async function handler(req, res) {
 
     const token = data.access_token;
 
-    // 🔴 IMPORTANTE: enviar também provider: "github"
     const html = `<!doctype html>
 <html><body>
 <script>
-  (function () {
-    try {
-      if (window.opener) {
-        window.opener.postMessage({ token: "${token}", provider: "github" }, "*");
-        window.close();
-      } else {
-        document.body.innerText = "OAuth OK. Token: ${token}";
-      }
-    } catch (e) {
-      document.body.innerText = "OAuth error: " + (e && e.message ? e.message : e);
+(function () {
+  try {
+    // 1) Formato moderno (Decap/Netlify CMS recentes)
+    if (window.opener) {
+      try { window.opener.postMessage({ token: "${token}", provider: "github" }, "*"); } catch (_) {}
+      // 2) Formato legado (Netlify CMS antigo)
+      try { window.opener.postMessage("authorization:github:${token}", "*"); } catch (_) {}
+      // 3) Evento customizado (alguns forks)
+      try {
+        var ev = new CustomEvent("authorization:github", { detail: { token: "${token}" }});
+        window.opener.dispatchEvent(ev);
+      } catch (_) {}
+
+      window.close();
+    } else {
+      document.body.innerText = "OAuth OK. Token: ${token}";
     }
-  })();
+  } catch (e) {
+    document.body.innerText = "OAuth error: " + (e && e.message ? e.message : e);
+  }
+})();
 </script>
 </body></html>`;
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.status(200).send(html);
+  } catch (e) {
+    res.status(500).json({ error: e.message || "callback failed" });
+  }
+}
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.status(200).send(html);
