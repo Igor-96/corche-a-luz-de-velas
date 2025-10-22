@@ -1,8 +1,13 @@
+// Força runtime Node (serverless) — evita Edge quirks
+export const config = { runtime: "nodejs18.x" };
+
 export default async function handler(req, res) {
   try {
     const code = req.query.code;
     const clientId = process.env.GITHUB_CLIENT_ID;
     const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+
+    // Detecta domínio atual dinamicamente caso vc esqueça de atualizar a env
     const proto = req.headers["x-forwarded-proto"] || "https";
     const host = req.headers.host;
     const redirectUri =
@@ -10,64 +15,62 @@ export default async function handler(req, res) {
 
     if (!code) return res.status(400).json({ error: "Missing code" });
     if (!clientId || !clientSecret)
-      return res.status(500).json({ error: "Missing GitHub OAuth env vars" });
+      return res.status(500).json({ error: "Missing GITHUB_CLIENT_ID/SECRET envs" });
 
-    const r = await fetch("https://github.com/login/oauth/access_token", {
+    // Troca o code por access_token (modo mais compatível)
+    const body = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code,
+      redirect_uri: redirectUri,
+    }).toString();
+
+    const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
-        code,
-        redirect_uri: redirectUri,
-      }),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json",
+      },
+      body,
     });
 
-    const data = await r.json();
-    if (!data.access_token)
-      return res
-        .status(500)
-        .json({ error: data.error_description || "Token exchange failed" });
+    const text = await tokenRes.text();
+    let data = {};
+    try { data = JSON.parse(text); } catch (_) {
+      // GitHub deveria devolver JSON, mas se não, joga o texto pro diagnóstico
+      return res.status(500).send(`<!doctype html><pre>Token exchange failed:\n${text}</pre>`);
+    }
+
+    if (!tokenRes.ok || !data.access_token) {
+      return res.status(500).send(`<!doctype html><pre>GitHub error:\n${JSON.stringify(data, null, 2)}</pre>`);
+    }
 
     const token = data.access_token;
 
-    const html = `<!doctype html>
-<html><body>
-<script>
-(function () {
-  try {
-    // 1) Formato moderno (Decap/Netlify CMS recentes)
-    if (window.opener) {
-      try { window.opener.postMessage({ token: "${token}", provider: "github" }, "*"); } catch (_) {}
-      // 2) Formato legado (Netlify CMS antigo)
-      try { window.opener.postMessage("authorization:github:${token}", "*"); } catch (_) {}
-      // 3) Evento customizado (alguns forks)
-      try {
-        var ev = new CustomEvent("authorization:github", { detail: { token: "${token}" }});
-        window.opener.dispatchEvent(ev);
-      } catch (_) {}
-
-      window.close();
-    } else {
-      document.body.innerText = "OAuth OK. Token: ${token}";
-    }
-  } catch (e) {
-    document.body.innerText = "OAuth error: " + (e && e.message ? e.message : e);
-  }
-})();
-</script>
-</body></html>`;
+    // Envia o token em TODOS os formatos aceitos
+    const html = `<!doctype html><html><body><script>
+      (function () {
+        try {
+          if (window.opener) {
+            try { window.opener.postMessage({ token: "${token}", provider: "github" }, "*"); } catch (e) {}
+            try { window.opener.postMessage("authorization:github:${token}", "*"); } catch (e) {}
+            try {
+              var ev = new CustomEvent("authorization:github", { detail: { token: "${token}" }});
+              window.opener.dispatchEvent(ev);
+            } catch (e) {}
+            window.close();
+          } else {
+            document.body.innerText = "OAuth OK. Token: ${token}";
+          }
+        } catch (e) {
+          document.body.innerText = "OAuth error: " + (e && e.message ? e.message : e);
+        }
+      })();
+    </script></body></html>`;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.status(200).send(html);
+    return res.status(200).send(html);
   } catch (e) {
-    res.status(500).json({ error: e.message || "callback failed" });
-  }
-}
-
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.status(200).send(html);
-  } catch (e) {
-    res.status(500).json({ error: e.message || "callback failed" });
+    return res.status(500).json({ error: e?.message || "callback failed" });
   }
 }
