@@ -1,7 +1,10 @@
 backend:
   name: github
-  repo: SEU-USUARIO/SEU-REPO
+  repo: Igor-96/corche-a-luz-de-velas
   branch: main
+  base_url: https://crochealuzdevelas.vercel.app
+  auth_endpoint: /api/authorize
+  
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
 collections:
