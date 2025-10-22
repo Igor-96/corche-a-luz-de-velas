@@ -6,21 +6,21 @@
     <title>Admin</title>
   </head>
   <body>
-    <!-- 1) Primeiro: desativa auto-init -->
+    <!-- 1) Desativa auto-init ANTES do script do Decap -->
     <script>
       window.CMS_MANUAL_INIT = true;
     </script>
 
-    <!-- 2) Depois: carrega o Decap CMS -->
-    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <!-- 2) Carrega a versão mais recente 3.x -->
+    <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"></script>
 
-    <!-- 3) Por fim: inicializa manualmente com sua config -->
+    <!-- 3) Inicializa manualmente -->
     <script>
       CMS.init({
         config: {
           backend: {
             name: "github",
-            repo: "Igor-96/croche-a-luz-de-velas",   // seu repositório exato
+            repo: "Igor-96/croche-a-luz-de-velas",   // nome EXATO do seu repo
             branch: "main",
             base_url: "https://crochealuzdevelas.vercel.app",
             auth_endpoint: "/api/authorize"
@@ -69,60 +69,73 @@
           ]
         }
       });
-      </script>
-    
-      <script>
-      // 1) Listener normal (quando o popup envia postMessage)
+    </script>
+
+    <!-- 4) Listener do popup + forçar conclusão/refresh -->
+    <script>
+      function finishLogin(token) {
+        try {
+          if (window.CMS && CMS.oauthComplete) {
+            CMS.oauthComplete({ token, provider: "github" });
+          }
+        } catch (e) { console.warn("oauthComplete error:", e); }
+        // força hash da página do painel e recarrega UI
+        try { window.location.hash = "#/collections/catalogo"; } catch(_) {}
+        try { setTimeout(() => window.location.reload(), 200); } catch(_) {}
+      }
+
       window.addEventListener("message", (e) => {
         try {
-          // formatos que o callback envia
+          console.log("OAuth message:", e.data);
           if (typeof e.data === "string" && e.data.startsWith("authorization:github:")) {
             const token = e.data.split(":").pop();
-            if (window.CMS && CMS.oauthComplete) CMS.oauthComplete({ token, provider: "github" });
+            finishLogin(token);
             return;
           }
           if (e.data && e.data.token) {
-            if (window.CMS && CMS.oauthComplete) CMS.oauthComplete({ token: e.data.token, provider: "github" });
+            finishLogin(e.data.token);
             return;
           }
-        } catch(_) {}
+        } catch (err) {
+          console.warn("message handler error:", err);
+        }
       }, false);
+    </script>
 
-      // 2) Fallback: busca token salvo no localStorage pelo callback
+    <!-- 5) Fallback: token salvo pelo callback -->
+    <script>
       (function pickupLocalToken(){
         try {
           const t = localStorage.getItem("decap_token");
           if (t) {
+            console.log("Found token in localStorage");
             localStorage.removeItem("decap_token");
-            if (window.CMS && CMS.oauthComplete) CMS.oauthComplete({ token: t, provider: "github" });
+            finishLogin(t);
           }
-         } catch(_) {}
-       })();
-      </script>
+        } catch(e) {}
+      })();
+    </script>
 
-      <script>
-  // --- POLLING: procura pelo token salvo pelo /api/callback ---
+    <!-- 6) Polling extra (quando o popup fecha rápido) -->
+    <script>
       (function pollForToken(){
         let tries = 0;
-        const maxTries = 60;   // ~18s (60 * 300ms)
-
+        const maxTries = 60; // ~18s
         const iv = setInterval(() => {
           tries++;
           try {
             const t = localStorage.getItem("decap_token");
             if (t) {
+              console.log("Polling got token");
               localStorage.removeItem("decap_token");
-              if (window.CMS && CMS.oauthComplete) {
-                CMS.oauthComplete({ token: t, provider: "github" });
-              }
+              finishLogin(t);
               clearInterval(iv);
             }
-          } catch(e){ /* ignore */ }
-
+          } catch(e){}
           if (tries >= maxTries) clearInterval(iv);
-         }, 300);
-       })();
-      </script>
-
+        }, 300);
+      })();
+    </script>
   </body>
 </html>
+
